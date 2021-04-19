@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/card-weather/static/css/main.1113fe7f.chunk.css",
-    "main.js": "/card-weather/static/js/main.ba94e89b.chunk.js",
-    "main.js.map": "/card-weather/static/js/main.ba94e89b.chunk.js.map",
+    "main.js": "/card-weather/static/js/main.74fac251.chunk.js",
+    "main.js.map": "/card-weather/static/js/main.74fac251.chunk.js.map",
     "runtime-main.js": "/card-weather/static/js/runtime-main.d643ddc8.js",
     "runtime-main.js.map": "/card-weather/static/js/runtime-main.d643ddc8.js.map",
     "static/js/2.2d21896b.chunk.js": "/card-weather/static/js/2.2d21896b.chunk.js",
@@ -20,6 +20,6 @@
     "static/js/runtime-main.d643ddc8.js",
     "static/js/2.2d21896b.chunk.js",
     "static/css/main.1113fe7f.chunk.css",
-    "static/js/main.ba94e89b.chunk.js"
+    "static/js/main.74fac251.chunk.js"
   ]
 }
