@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-import { KEY, URL } from './constants'
+import { KEY, URL, SIN_ESTADO, NUBLADO } from './constants'
 import { dataRow } from './components'
 import './App.css';
 import temIcon from './assets/icons/temp.png'
@@ -29,7 +29,7 @@ function App() {
     }
   }, [data])
 
-  let weatherMain = data?.weather[0].main === "Clouds" ? "Nublado" : "Sin estado"
+  const weatherMain = data?.weather ? NUBLADO : SIN_ESTADO
 
   return (
     <div className="card">
