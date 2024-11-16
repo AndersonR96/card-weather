@@ -1,3 +1,3 @@
 # link app
 
-[Link](https://andersonr96.github.io/card-weather/)
+[Link](https://card-weather.vercel.app/)
