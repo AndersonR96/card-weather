@@ -37,7 +37,7 @@ const LocationSearch = () => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    const url = `http://api.weatherapi.com/v1/search.json?key=${apiKey}&q=${searchTerm}&lang=es`;
+    const url = `https://api.weatherapi.com/v1/search.json?key=${apiKey}&q=${searchTerm}&lang=es`;
 
     fetch(url)
       .then((response) => response.json())
