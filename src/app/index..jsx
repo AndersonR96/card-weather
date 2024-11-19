@@ -12,6 +12,7 @@ function App() {
 
 const LocationSearch = () => {
   // console.log(import.meta.env.VITE_API_KEY)
+  console.log(import.meta.env.VITE_MESSAGE)
   const apiKey = import.meta.env.VITE_API_KEY
   const [searchTerm, setSearchTerm] = useState("");
   const [data, setData] = useState();
