@@ -1,26 +1,71 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import WeatherDetailsModal from "./components/WeatherDetailsModal";
+import ThemeSelector from "./components/ThemeSelector";
+import { useTheme } from "./context/ThemeContext";
+import { MoonIcon, SunIcon } from "@heroicons/react/16/solid";
 
 function App() {
+  const { theme } = useTheme();
   return (
-    <>
-      {/* <h1>App Screen</h1> */}
-      <LocationSearch />
-    </>
+    <div className={`min-h-screen ${theme.bg}`}>
+      <header className="p-4 bg-gray-800 text-white">
+        <h1 className="text-center text-2xl">Weather App</h1>
+      </header>
+      <main className={`p-4`}>
+        <ThemeSelector />
+        <LocationSearch theme={theme} />
+      </main>
+    </div>
   );
 }
 
-const LocationSearch = () => {
-  // console.log(import.meta.env.VITE_API_KEY)
-  console.log(import.meta.env.VITE_MESSAGE)
-  const apiKey = import.meta.env.VITE_API_KEY
+const LocationSearch = ({ theme }) => {
+  const apiKey = import.meta.env.VITE_API_KEY;
   const [searchTerm, setSearchTerm] = useState("");
   const [data, setData] = useState();
+  const [errorMessage, setErrorMessage] = useState("");
 
   const [isOpen, setIsOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState();
 
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [favoriteCities, setFavoriteCities] = useState([]);
+  const [cities, setCities] = useState([]);
+  console.log(favoriteCities);
+  console.log(cities);
+
+  const fetchLocations = async (searchTerm) => {
+    if (!searchTerm) {
+      setResults([]);
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `https://api.weatherapi.com/v1/search.json?key=${apiKey}&q=${searchTerm}`
+      );
+      const data = await response.json();
+      setResults(data || []);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchLocations(query);
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [query]);
+
   const openModal = (item) => {
+    setQuery(item.name);
     setSelectedItem(item);
     setIsOpen(true);
   };
@@ -33,10 +78,25 @@ const LocationSearch = () => {
   const handleChange = (event) => {
     console.log(event.target.value);
     setSearchTerm(event.target.value);
+    setErrorMessage("");
+  };
+
+  const clearSearch = () => {
+    setQuery("");
+    setResults([]);
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
+
+    if (searchTerm.trim().length < 3) {
+      setErrorMessage(
+        "El término de búsqueda debe tener al menos 3 caracteres."
+      );
+      console.warn("El término de búsqueda debe tener al menos 3 caracteres.");
+      return; // Detener la ejecución si no cumple la condición
+    }
+
     const url = `https://api.weatherapi.com/v1/search.json?key=${apiKey}&q=${searchTerm}&lang=es`;
 
     fetch(url)
@@ -44,77 +104,164 @@ const LocationSearch = () => {
       .then((data) => {
         console.log(data); // Imprime "Cali"
         setData(data);
-        // console.log(data.location.name); // Imprime "Cali"
       })
       .catch((error) => {
         console.error("Error:", error);
       });
+
     console.log("Término de búsqueda:", searchTerm);
+  };
+
+  useEffect(() => {
+    const storedFavorites = localStorage.getItem("favoriteCities");
+    if (storedFavorites) {
+      setFavoriteCities(JSON.parse(storedFavorites));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (favoriteCities.length === 0) return;
+
+    // Crear el body de la petición
+    const requestBody = {
+      locations: favoriteCities.map((city, index) => ({
+        q: city.city,
+        custom_id: `custom-id-${index + 1}`, // Puedes personalizar este id
+      })),
+    };
+
+    // Realizar la petición
+    const sendRequest = async () => {
+      try {
+        const response = await fetch(
+          `http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=bulk&lang=es`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(requestBody),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Error en la solicitud");
+        }
+        const data = await response.json();
+        setCities(data.bulk);
+        // console.log('Response:', data);
+        // console.log("Datos enviados con éxito:", await response.json());
+      } catch (error) {
+        console.error("Error al enviar los datos:", error);
+      }
+    };
+
+    sendRequest();
+  }, [favoriteCities]);
+
+  const handleCardClick = (city) => {
+    console.log("Clicked city:", city);
+    // Aquí puedes agregar lógica, como mostrar detalles del clima para esta ciudad
   };
 
   return (
     <>
-      <form
-        onSubmit={handleSubmit}
-        className="flex flex-col sm:flex-row items-center sm:justify-center w-full p-4"
-      >
-        <input
-          type="text"
-          placeholder="Buscar ciudad..."
-          value={searchTerm}
-          onChange={handleChange}
-          className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 w-full sm:w-auto sm:mr-2 mb-2 sm:mb-0"
-        />
-        <button
-          type="submit"
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full sm:w-auto"
-        >
-          Buscar
-        </button>
-      </form>
-
-      <div className="min-h-screen bg-gray-100 flex flex-col items-center py-10">
-        <ul className="w-full sm:w-3/4 lg:w-1/2 max-w-md space-y-4 px-4">
-          {data ? (
-            <h1 className="text-2xl font-bold mb-5 text-center">Resultados</h1>
-          ) : null}
-          {data?.map((item, index) => (
-            <li key={index}>
-              <button
-                onClick={() => openModal(item)}
-                className="w-full text-left px-4 py-3 bg-white rounded-md shadow hover:bg-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              >
-                {item.name}
-              </button>
-            </li>
-          ))}
-        </ul>
-
-        {/* Modal */}
-        {isOpen && (
-          <WeatherDetailsModal
-            selectedItem={selectedItem}
-            closeModal={closeModal}
-            apiKey={apiKey}
+      <div className="relative w-full max-w-md mx-auto">
+        <div className="relative">
+          {/* Input de búsqueda */}
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Busca una ciudad..."
+            className="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
-          // <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          //   <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-          //     <h2 className="text-xl font-semibold mb-4 text-center">
-          //       {selectedItem.name} - {selectedItem.region}
-          //     </h2>
-          //     <p className="text-gray-700 mb-6 text-center">
-          //       País: {selectedItem.country}
-          //     </p>
-          //     <button
-          //       onClick={closeModal}
-          //       className="px-4 py-2 bg-blue-500 text-white rounded-md shadow hover:bg-blue-600 focus:ring-2 focus:ring-blue-300 focus:outline-none"
-          //     >
-          //       Cerrar
-          //     </button>
-          //   </div>
-          // </div>
+
+          {/* Botón para limpiar */}
+          {query && (
+            <button
+              onClick={clearSearch}
+              className="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700"
+            >
+              ✖
+            </button>
+          )}
+        </div>
+
+        {/* Dropdown de resultados */}
+        {loading && (
+          <div className="absolute w-full p-2 bg-white shadow-md">
+            Cargando...
+          </div>
+        )}
+        {results.length > 0 && (
+          <ul className="absolute w-full bg-white border border-gray-200 rounded-lg shadow-md mt-1">
+            {results.map((location) => (
+              <li
+                key={location.id || location.name}
+                className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                onClick={() => openModal(location)} // Opcional: completa el input al seleccionar
+              >
+                {location.name}, {location.region}, {location.country}
+              </li>
+            ))}
+          </ul>
         )}
       </div>
+      {errorMessage && (
+        <p className="text-red-500 text-sm mt-2">{errorMessage}</p>
+      )}
+
+      {/* Tarjetas de ciudades favoritas */}
+      {/* "bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer" */}
+      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {cities.map((city, index) => (
+          <div
+            key={index}
+            onClick={() => handleCardClick(city)}
+            // className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-6 cursor-pointer transform hover:scale-105"
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+          >
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              {city.query.location.name}
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+              {city.query.location.region}, {city.query.location.country}
+            </p>
+
+            <div className="flex items-center space-x-3 mb-4">
+              <img
+                src={`https:${city.query.current.condition.icon}`}
+                alt={city.query.current.condition.text}
+                className="w-12 h-12 rounded-full"
+              />
+              <div className="flex flex-col">
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  {city.query.current.condition.text}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center">
+              <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                {city.query.current.temp_c}°C
+              </p>
+              <div className="bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full text-xs font-semibold text-gray-800 dark:text-gray-300 flex items-center">
+                {city.query.current.is_day ? "Day" : "Night" }
+                {city.query.current.is_day ? <SunIcon className="w-8 h-8 text-yellow-500 solid ml-5" /> : <MoonIcon className="w-8 h-8 text-gray-500 solid" /> }
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      {/* Modal */}
+      {isOpen && (
+        <WeatherDetailsModal
+          selectedItem={selectedItem}
+          closeModal={closeModal}
+          apiKey={apiKey}
+        />
+      )}
     </>
   );
 };
