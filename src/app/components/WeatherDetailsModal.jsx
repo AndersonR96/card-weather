@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import toggleFavoriteCity from "../functions";
+import { URL } from "../constants";
 
 function WeatherDetailsModal({ selectedItem, closeModal, apiKey }) {
   const [weatherData, setWeatherData] = useState(null);
@@ -22,7 +23,7 @@ function WeatherDetailsModal({ selectedItem, closeModal, apiKey }) {
       setLoading(true);
       try {
         const response = await fetch(
-          `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${selectedItem.name}&lang=es`
+          `${URL}current.json?key=${apiKey}&q=${selectedItem.name}&lang=es`
         );
         const data = await response.json();
         setWeatherData(data);

@@ -3,6 +3,7 @@ import WeatherDetailsModal from "./components/WeatherDetailsModal";
 import ThemeSelector from "./components/ThemeSelector";
 import { useTheme } from "./context/ThemeContext";
 import { MoonIcon, SunIcon } from "@heroicons/react/16/solid";
+import { URL } from "./constants";
 
 function App() {
   const { theme } = useTheme();
@@ -44,7 +45,7 @@ const LocationSearch = ({ theme }) => {
     setLoading(true);
     try {
       const response = await fetch(
-        `https://api.weatherapi.com/v1/search.json?key=${apiKey}&q=${searchTerm}`
+        `${URL}search.json?key=${apiKey}&q=${searchTerm}`
       );
       const data = await response.json();
       setResults(data || []);
@@ -97,7 +98,7 @@ const LocationSearch = ({ theme }) => {
       return; // Detener la ejecución si no cumple la condición
     }
 
-    const url = `https://api.weatherapi.com/v1/search.json?key=${apiKey}&q=${searchTerm}&lang=es`;
+    const url = `${URL}search.json?key=${apiKey}&q=${searchTerm}&lang=es`;
 
     fetch(url)
       .then((response) => response.json())
@@ -134,7 +135,7 @@ const LocationSearch = ({ theme }) => {
     const sendRequest = async () => {
       try {
         const response = await fetch(
-          `http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=bulk&lang=es`,
+          `${URL}current.json?key=${apiKey}&q=bulk&lang=es`,
           {
             method: "POST",
             headers: {
