@@ -1,8 +1,21 @@
 import { useState, useEffect } from "react";
+import toggleFavoriteCity from "../functions";
 
 function WeatherDetailsModal({ selectedItem, closeModal, apiKey }) {
   const [weatherData, setWeatherData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  useEffect(() => {
+    // Verificar si la ciudad está en favoritos
+    const favoriteCities = JSON.parse(localStorage.getItem("favoriteCities")) || [];
+    const cityExists = favoriteCities.some(
+      (city) =>
+        city.city === weatherData?.location.name &&
+        city.country === weatherData?.location.country
+    );
+    setIsFavorite(cityExists);
+  }, [weatherData]);
 
   useEffect(() => {
     const fetchWeatherData = async () => {
@@ -21,7 +34,18 @@ function WeatherDetailsModal({ selectedItem, closeModal, apiKey }) {
     };
 
     fetchWeatherData();
-  }, [selectedItem]);
+  }, [selectedItem, apiKey]);
+
+  const handleToggleFavorite = () => {
+    if (weatherData) {
+      // Alternar favorito y actualizar estado
+      const newFavoriteState = toggleFavoriteCity(
+        weatherData.location.name,
+        weatherData.location.country
+      );
+      setIsFavorite(newFavoriteState);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -36,6 +60,7 @@ function WeatherDetailsModal({ selectedItem, closeModal, apiKey }) {
             <h2 className="text-2xl font-semibold mb-4 text-center">
               {weatherData?.location.name}, {weatherData?.location.country}
             </h2>
+            {/* Resto del contenido del modal */}
             <p className="text-sm text-gray-500 text-center mb-6">
               Zona horaria: {weatherData?.location.tz_id} | Última actualización:{" "}
               {weatherData?.current.last_updated}
@@ -100,6 +125,14 @@ function WeatherDetailsModal({ selectedItem, closeModal, apiKey }) {
               className="mt-6 w-full px-4 py-2 bg-blue-500 text-white rounded-md shadow hover:bg-blue-600 focus:ring-2 focus:ring-blue-300 focus:outline-none"
             >
               Cerrar
+            </button>
+            <button
+              onClick={handleToggleFavorite}
+              className={`mt-6 w-full px-4 py-2 ${
+                isFavorite ? "bg-red-500 hover:bg-red-600 focus:ring-red-300" : "bg-green-500 hover:bg-green-600 focus:ring-green-300"
+              } text-white rounded-md shadow  focus:ring-2  focus:outline-none`}
+            >
+              {isFavorite ? "Eliminar de Favoritos" : "Agregar a Favoritos"}
             </button>
           </>
         )}
