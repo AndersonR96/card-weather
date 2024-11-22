@@ -1,22 +1,26 @@
 import { useState, useEffect } from "react";
 import toggleFavoriteCity from "../functions";
 import { URL } from "../constants";
+import { useFavorites } from "../context/FavoritesContext";
 
 function WeatherDetailsModal({ selectedItem, closeModal, apiKey }) {
+
+  const { addFavorite, removeFavorite, favorites } = useFavorites();
+  console.log(favorites)
   const [weatherData, setWeatherData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
-    // Verificar si la ciudad está en favoritos
-    const favoriteCities = JSON.parse(localStorage.getItem("favoriteCities")) || [];
-    const cityExists = favoriteCities.some(
-      (city) =>
-        city.city === weatherData?.location.name &&
-        city.country === weatherData?.location.country
-    );
-    setIsFavorite(cityExists);
-  }, [weatherData]);
+    if (weatherData) {
+      const cityExists = favorites.some(
+        (city) =>
+          city.name === weatherData.location.name &&
+          city.country === weatherData.location.country
+      );
+      setIsFavorite(cityExists);
+    }
+  }, [weatherData, favorites]);
 
   useEffect(() => {
     const fetchWeatherData = async () => {
@@ -39,12 +43,21 @@ function WeatherDetailsModal({ selectedItem, closeModal, apiKey }) {
 
   const handleToggleFavorite = () => {
     if (weatherData) {
-      // Alternar favorito y actualizar estado
-      const newFavoriteState = toggleFavoriteCity(
-        weatherData.location.name,
-        weatherData.location.country
+      const isAlreadyFavorite = favorites.some(
+        (city) =>
+          city.name === weatherData.location.name &&
+          city.country === weatherData.location.country
       );
-      setIsFavorite(newFavoriteState);
+  
+      if (isAlreadyFavorite) {
+        // Si ya es favorita, se elimina
+        removeFavorite(weatherData.location.name, weatherData.location.country);
+        setIsFavorite(false);
+      } else {
+        // Si no es favorita, se agrega
+        addFavorite(weatherData.location);
+        setIsFavorite(true);
+      }
     }
   };
 
